@@ -1,0 +1,37 @@
+#lang pie
+
+; Question
+; --------
+; Define a function called at-least-two? that takes one Nat argument
+; and evaluates to an Atom.
+; at-least-two? evaluates to 't if the Nat is greater than or equal to 2
+; otherwise it evaluates to 'nil.
+; Note: The only Nat eliminator you should need in the body of at-least-two? is which-Nat.
+
+; Notes
+; -----
+; - which-Nat is described on page 48
+ 
+; Answer
+; ------
+; We observe that at-least-two is 't only for 0 and 1.  
+; The approach here is to call which-Nat twice
+(claim at-least-two? (-> Nat Atom))
+(define at-least-two?
+  (λ(n)
+    (which-Nat n
+               ; n is the Nat zero
+               'f                  
+               (λ(n-1)
+                 (which-Nat n-1
+                            ; n-1 is the Nat zero 
+                            'f          
+                            ; else
+                            (λ(dim-n-2) 't))))))
+
+; tests are OK
+(check-same Atom (at-least-two? 0) 'f)
+(check-same Atom (at-least-two? 1) 'f)
+(check-same Atom (at-least-two? 2) 't)
+(check-same Atom (at-least-two? 10) 't)
+
