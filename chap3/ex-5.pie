@@ -1,0 +1,108 @@
+#lang pie
+
+; Question
+; --------
+; Define a function called gcd that takes two Nat arguments and evaluates to
+; a Nat. gcd evaluates to the greatest common divisor of the two
+; passed arguments. 
+; Using + and * from previous exercises
+
+; The + eliminator
+(claim step+ (-> Nat Nat Nat))
+(define step+
+  (λ(dim-n-1 a-n-1)
+    (add1 a-n-1)))
+
+(claim + (-> Nat Nat Nat))
+(define + (λ(a b) (rec-Nat a b step+)))
+
+; The * eliminator
+(claim step* (-> Nat Nat Nat Nat))
+(define step*
+  (λ(j dim-n-1 a-n-1)
+    (+ j a-n-1)))
+
+(claim * (-> Nat Nat Nat))
+(define *(λ(n b) (rec-Nat n 0 (step* b)))) 
+
+
+; pred(n) = if n = 0 then 0 else n - 1
+(claim pred (-> Nat Nat))
+(define pred (λ(n) (which-Nat n 0 (λ(n-1) n-1))))
+
+(check-same Nat (pred 10) 9)
+(check-same Nat (pred 0) 0)
+
+; (- a b) = If (a > b) then (a - b) else zero
+(claim - (-> Nat Nat Nat))
+; (a - b) = (a - (b - 1)) - 1)
+; (a - b) = a-b-1 - 1 
+(define -
+  (λ(a b)
+    (rec-Nat b a
+      (λ(b-1 a-b-1) (pred a-b-1)))))  
+
+
+; abs-(a b) = |a - b|
+(claim abs- (-> Nat Nat Nat))
+(define abs-
+  (λ(a b) (which-Nat (- a b) (- b a) (λ(dim) (- a b)))))
+
+(check-same Nat (abs- 3 7) 4)
+(check-same Nat (abs- 7 3) 4)
+
+; sg from hint paper
+(claim sg (-> Nat Nat))
+(define sg (λ(n) (which-Nat n 0 (λ(dim) 1))))
+
+; (% a b) is the remainder of a / b when b > 0
+; from hint paper
+; %(0,b) = 0 ... base case
+; %(a,b) = (rm(a-1,b) + 1) * sg ( |y - (rm(a-1,b) + 1)|)
+;          = (rm(a-1,b) + 1) * sg ( abs-(b,(rm(a-1,b) + 1))) ... step
+(claim step% (-> Nat Nat Nat Nat))
+(define step%
+  (λ(b a-1 a-a-1) (* (add1 a-a-1) (sg (abs- b (add1 a-a-1))))))  
+
+(claim % (-> Nat Nat Nat))
+(define % (λ(a b) (rec-Nat a 0 (step% b))))
+
+(check-same Nat (% 7 3) 1)
+(check-same Nat (% 3 7) 3)
+(check-same Nat (% 0 7) 0)
+
+(claim Nat2 U)
+(define Nat2 (Pair Nat Nat))
+
+(claim make-p (-> Nat Nat Nat2))
+(define make-p (λ(a b) (cons a b)))
+
+; Euclidean algoritm assumes a <= b implies a - b <= 0
+; egdc(0 b) = 0 
+; egdc(a b) = egdc(b (% a b))
+; we implement it to return a pair to faciliate exchange
+; answer is the sum of the pair elements
+(claim egdc (-> Nat Nat Nat2))
+(define egdc
+  (λ(a b)
+    (rec-Nat a (make-p b a)
+      (λ(a-1 a-a-1)
+        (make-p (cdr a-a-1) (% (car a-a-1) (cdr a-a-1)))))))
+
+(check-same Nat2 (egdc 5 10) (make-p 5 0))
+(check-same Nat2 (egdc 9 12) (make-p 0 3))
+
+(claim sum-p (-> Nat2 Nat))
+(define sum-p (λ(p) (+ (car p) (cdr p))))
+
+; gdc(a b) uses agdc
+(claim gdc (-> Nat Nat Nat))
+(define gdc
+  (λ(a b) (sum-p (which-Nat (- a b) (egdc a b) (λ(dim) (egdc b a))))))
+
+(check-same Nat (gdc 10 5) 5)
+(check-same Nat (gdc 8 12) 4)
+(check-same Nat (gdc 12 8) 4)
+(check-same Nat (gdc 0 3) 3)
+(check-same Nat (gdc 3 0) 3)
+
