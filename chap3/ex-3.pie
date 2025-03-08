@@ -1,0 +1,53 @@
+#lang pie
+
+; Question
+; --------
+; Define a function called exp that takes two Nat arguments and evaluates to a
+; Nat. exp evaluates to the exponentiation, a^b, of the two passed arguments.
+
+; Answer
+; ------
+; If n = 0
+;  a^n = 1 ... base case
+; Else let a^(n - 1) = a-n-1
+;  a^(n - 1) = a^(n - 1) * a
+;      = a-n-1 * a ... step funtion
+; This solution needs * function (defined on page 88)
+; which needs a + function (ex-2)
+;
+; Note: this definition has 0^0 = 1,
+;       which should strictly be undefined
+
+; The + eliminator
+(claim step+ (-> Nat Nat Nat))
+(define step+
+  (λ(dim-n-1 a-n-1)
+    (add1 a-n-1)))
+
+(claim + (-> Nat Nat Nat))
+(define + (λ(a b) (rec-Nat a b step+)))
+
+; The * eliminator
+(claim step* (-> Nat Nat Nat Nat))
+(define step*
+  (λ(j dim-n-1 a-n-1)
+    (+ j a-n-1)))
+
+(claim * (-> Nat Nat Nat))
+(define *(λ(n b) (rec-Nat n 0 (step* b)))) 
+      
+; The ^ eliminator
+(claim step^ (-> Nat Nat Nat Nat))
+(define step^
+  (λ(a dim-n-1 a-n-1)
+    (* a-n-1 a)))
+
+(claim ^ (-> Nat Nat Nat))
+(define ^ (λ(a n) (rec-Nat n 1 (step^ a))))
+
+; Tests
+(check-same Nat (^ 0 1) 0)
+(check-same Nat (^ 0 0) 1)
+(check-same Nat (^ 2 4) (^ 4 2))
+(check-same Nat (^ 3 2) 9)
+(check-same Nat (^ 20 0) 1)
