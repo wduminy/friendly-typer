@@ -1,0 +1,40 @@
+#lang pie
+
+; Question
+; --------
+; Define a function called max that takes two Nat arguments and evaluates to a
+; Nat. max evaluates to the larger of the two passed arguments.
+
+; Answer
+; ------
+; Basic idea: define a minus function and use it to get the max
+; but minus requires a predecessor function
+
+; pred(n) = if n = 0 then 0 else n - 1
+(claim pred (-> Nat Nat))
+(define pred (λ(n) (which-Nat n 0 (λ(n-1) n-1))))
+
+(check-same Nat (pred 10) 9)
+(check-same Nat (pred 0) 0)
+
+; (- a b) = If (a > b) then (a - b) else zero
+(claim - (-> Nat Nat Nat))
+; (a - b) = (a - (b - 1)) - 1)
+; (a - b) = a-b-1 - 1 
+(define -
+  (λ(a b)
+    (rec-Nat b a
+      (λ(b-1 a-b-1) (pred a-b-1)))))  
+
+(check-same Nat (- 4 1) 3)
+(check-same Nat (- 7 10) 0)
+
+; (max a b) If (b - a) = 0 then b else a
+(claim max (-> Nat Nat Nat))
+(define max
+  (λ(a b) (which-Nat (- b a) a (λ(dim) b))))
+
+(check-same Nat (max 1 2) 2)
+(check-same Nat (max 2 1) 2)
+(check-same Nat (max 0 0) 0)
+(check-same Nat (max 10 10) 10)
