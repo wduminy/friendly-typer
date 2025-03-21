@@ -62,16 +62,19 @@
 (check-same Nat (pred2 9) 7)
 
 ;-------------------------------------------------------------------------------
-; from previous work:
+; from previous work
+
 (claim predecessor (-> Nat Nat))
 (define predecessor (λ(n) (which-Nat n 0 (λ(n-1) n-1))))
-(check-same Nat (predecessor 10) 9)
-(check-same Nat (predecessor 0) 0)
-; (- a b) = If (a > b) then (a - b) else zero
+
 (claim - (-> Nat Nat Nat))
 (define -
   (λ(a b)
     (rec-Nat b a (λ(b-1 a-b-1) (predecessor a-b-1)))))
+
+(claim sign (-> Nat Nat))
+(define sign (λ(n) (which-Nat n 0 (λ(dim) 1))))
+
 ;-------------------------------------------------------------------------------
 ; Chapter 5 book functions
 ; ------------------------
@@ -222,59 +225,58 @@
 ;
 ; Answer
 ; ------
-; Implementing quicksort here with a partition function that uses the `filter-List`
-; function above and the `-` function from a previous exercise
+; This answer uses the idea that we can partition a list into two lists
+; around a Nat `p`. 
+
+; The first part of the answer is to create the partition function
+
+(claim <= (-> Nat Nat Nat))
+(define <= (λ(a b) (sign (- a b))))
 
 (claim List-Pair U)
 (define List-Pair (Pair (List Nat) (List Nat)))
 
-; if a > b then (gt a b) > 0
-; a - b > 0
-(claim gt (-> Nat Nat Nat))
-(define gt (λ(a b) (- a b)))
+(claim prepend-lhs (-> Nat List-Pair List-Pair))
+(define prepend-lhs
+  (λ(e p) (cons (:: e (car p)) (cdr p))))
 
-(check-same Nat (gt 10 3) 7)
-(check-same Nat (gt 10 10) 0)
-(check-same Nat (gt 1 10) 0)
-
-; if a <= b then (lt a b) > 0
-; (b+1) - a > 0
-(claim leq (-> Nat Nat Nat))
-(define leq (λ(a b) (- (add1 b) a)))
-
-(check-same Nat (leq 10 3) 0)
-(check-same Nat (leq 10 10) 1)
-(check-same Nat (leq 1 10) 10)
+(claim prepend-rhs (-> Nat List-Pair List-Pair))
+(define prepend-rhs
+  (λ(e p) (cons (car p) (:: e (cdr p)))))
 
 ; `partition e a` splits the list `a` into a pair of lists (x y) such that the
 ; elements in `x` are less than `e` and the rest are in `y`
 (claim partition (-> Nat (List Nat) List-Pair))
+(claim step-partition (-> Nat Nat (List Nat) List-Pair List-Pair))
+(define step-partition
+    (λ(p h rest a-rest)
+      (which-Nat (<= p h) (prepend-rhs h a-rest)
+        (λ(_n) (prepend-lhs h a-rest)))))  
 (define partition
-  (λ(c a) (cons (filter-List Nat (gt c) a) (filter-List Nat (leq c) a))))   
+    (λ(p lst) (rec-List lst (the List-Pair (cons nil nil)) (step-partition p))))
 
 (check-same (List Nat) (cdr (partition 2 (:: 3 (:: 2 (:: 1 nil))))) (:: 3 (:: 2 nil)))
 (check-same (List Nat) (car (partition 2 (:: 3 (:: 2 (:: 1 nil))))) (:: 1 nil))
 
-(claim part-add (-> Nat List-Pair List-Pair))
-(define part-add
-  (λ(e p) (cons (car p) (:: e (cdr p)))))
+; The second part of the answer is to implement a sort algorithm that uses
+; partition to insert elements into a sorted list
 
-(claim merge-p (-> List-Pair (List Nat)))
-(define merge-p
+; combine a pair into a list
+(claim combine-p (-> List-Pair (List Nat)))
+(define combine-p
   (λ(p) (the (List Nat) (append Nat (car p) (cdr p)))))
 
-(claim step-q (-> Nat (List Nat) List-Pair List-Pair))
-(define step-q
-  (λ(h _t a-t) (part-add h (partition h (merge-p a-t)))))
-
-(claim q-sort (-> (List Nat) List-Pair))
-(define q-sort
-  (λ(lst)
-    (rec-List lst (the List-Pair (cons nil nil)) step-q)))
+; Insert an element into a sorted list
+(claim insert_is (-> Nat (List Nat) (List Nat)))
+(define insert_is 
+  (λ(e lst) (combine-p (prepend-rhs e (partition e lst)))))
 
 (claim sort-List-Nat (-> (List Nat) (List Nat)))
+(claim step-sort (-> Nat (List Nat) (List Nat) (List Nat)))
+(define step-sort
+  (λ(h _t a-t) (insert_is h a-t )))
 (define sort-List-Nat
-  (λ(lst) (merge-p (q-sort lst))))
+  (λ(lst) (rec-List lst (the (List Nat) nil) step-sort)))
 
 (check-same (List Nat) (sort-List-Nat (:: 3 (:: 2 (:: 1 nil)))) (:: 1 (:: 2 (:: 3 nil))))
 (check-same (List Nat) (sort-List-Nat (:: 2 (:: 3 (:: 1 nil)))) (:: 1 (:: 2 (:: 3 nil))))
