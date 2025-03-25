@@ -24,14 +24,14 @@
 (define at-least-two?
   (λ(n)
     (which-Nat n
-               ; n is the Nat zero
-               'f
-               (λ(n-1)
-                 (which-Nat n-1
-                            ; n-1 is the Nat zero
-                            'f
-                            ; else
-                            (λ(dim-n-2) 't))))))
+      ; n is the Nat zero
+      'f
+      (λ(n-1)
+        (which-Nat n-1
+          ; n-1 is the Nat zero
+          'f
+          ; else
+          (λ(dim-n-2) 't))))))
 
 (check-same Atom (at-least-two? 0) 'f)
 (check-same Atom (at-least-two? 1) 'f)
@@ -72,9 +72,9 @@
 (define +
   (λ(a b)
     (rec-Nat a
-             ; a is zero
-             b
-             step+)))
+      ; a is zero
+      b
+      step+)))
 
 (check-same Nat (+ 1 3) 4)
 (check-same Nat (+ 0 0) 0)
@@ -149,7 +149,7 @@
 (define -
   (λ(a b)
     (rec-Nat b a
-             (λ(b-1 a-b-1) (predecessor a-b-1)))))
+      (λ(b-1 a-b-1) (predecessor a-b-1)))))
 
 (check-same Nat (- 4 1) 3)
 (check-same Nat (- 7 10) 0)
@@ -217,8 +217,8 @@
 (define e-gdc
   (λ(a b)
     (rec-Nat a (make-p b a)
-             (λ(a-1 a-a-1)
-               (make-p (cdr a-a-1) (% (car a-a-1) (cdr a-a-1)))))))
+      (λ(_a-1 a-a-1)
+        (make-p (cdr a-a-1) (% (car a-a-1) (cdr a-a-1)))))))
 
 (check-same Nat2 (e-gdc 5 10) (make-p 5 0))
 (check-same Nat2 (e-gdc 9 12) (make-p 0 3))
@@ -249,19 +249,19 @@
 ; The problem with the code in the book is that (fact 0) is 1 not 0.
 
 (claim step-fact
-       (-> Nat Nat
-           Nat))
+  (-> Nat Nat
+    Nat))
 (define step-fact
   (lambda (n-1 almost)
     (* (add1 n-1) almost)))
 (claim fact
-       (-> Nat
-           Nat))
+  (-> Nat
+    Nat))
 (define fact
   (lambda (n)
     (rec-Nat n
-             1
-             step-fact)))
+      1
+      step-fact)))
 
 (check-same Nat (fact 3) 6)
 (check-same Nat (fact 0) 1)
