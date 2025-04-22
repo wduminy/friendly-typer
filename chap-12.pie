@@ -1,0 +1,110 @@
+#lang pie
+;-------------------------------------------------------------------------------
+; From previous chapters
+
+(claim step+ (-> Nat Nat Nat))
+(define step+ (λ(_n-1 +n-1) (add1 +n-1)))
+(claim + (-> Nat Nat Nat))
+(define + (λ(a b) (rec-Nat a b step+)))
+
+
+(claim double (-> Nat Nat))
+(define double
+  (λ(n)  (iter-Nat n
+           zero
+           (λ(double-n-1) (+ 2 double-n-1))
+           )))
+;-------------------------------------------------------------------------------
+; From chapter 12
+
+; Σ h n = 2 * h
+(claim Even (-> Nat U))
+(define Even
+  (λ(n) (Σ ((even-half Nat)) (= Nat n (double even-half))))
+  )
+
+; (the (Even 10) (cons 5 (same 10)) )
+
+(claim +two=even
+  (∏((n Nat))
+    (-> (Even n) (Even (+ 2 n)))
+    )
+  )
+
+; Conceptual:
+;  A: Even(n)                .. given
+;  B:      Σ h n = 2*h       .. from A
+;  C:  Σ h 2 + n = 2 + (2*h) ..add 2 on each side of B
+;  D: Σ h1 2 + n = 2*h1      ..C From B: h1 = 1 + h
+;  E Even(2 + n) .. from D
+(define +two=even
+  (λ(_n even-n)
+    ; Σ h (2 + n) = h
+    (cons
+      (add1 (car even-n))
+      ; 2 + n = 2 + double(car even-n)
+      (cong
+        (cdr even-n)
+        (+ 2)
+        )
+      )
+    )
+  )
+
+; Σ k n = 1 + 2 * k
+(claim Odd (-> Nat U))
+(define Odd
+  (λ(n) (Σ((odd-half Nat)) (= Nat n (add1 (double odd-half)))))
+  )
+
+(claim add1-even->odd
+  (∏((n Nat))
+    (-> (Even n)
+      (Odd (add1 n))
+      )
+    )
+  )
+
+; Conceptual
+; A: Even(n)   .. given
+; B:     Σ h n = 2*h     .. from A
+; C: Σ h 1 + n = 1 + 2*h .. +1 on each side of B
+; D: Odd(1+n)
+(define add1-even->odd
+  (λ(_n even-n)
+    (cons
+      ; h
+      (car even-n)
+      ; 1 + n = 1 + 2 * h
+      (cong
+        (cdr even-n)
+        (+ 1)
+        )
+      )
+    )
+  )
+
+(claim add1-odd->even
+  (∏((n Nat))
+    (-> (Odd n)
+      (Even (add1 n))
+      )
+    )
+  )
+
+; Conceptual
+; A: Odd(n) .. given
+; B: Σ k n = 1 + 2 * k
+; C: Σ k 1 + 1 = 2 + 2 k .. +1 on sides of B
+; D: Σ k1 1 + n = 2 * k1 .. from B k1 = 1 + k
+; E: Even(n+1)
+(define add1-odd->even
+  (λ(_n odd-n)
+    ; Σ k 1 + n = 2 * k
+    (cons (add1 (car odd-n))
+      (cong (cdr odd-n) (+ 1))
+      )
+    )
+  )
+
+
