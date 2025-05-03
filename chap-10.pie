@@ -286,57 +286,6 @@
     )
   )
 
-(claim mot-prop:1
-  (∏ ((E U))
-    (-> (-> E Nat) E U)
-    )
-  )
-
-(define mot-prop:1
-  (λ(E p h) (<= (match-count E p (:: h nil)) 1))
-  )
-
-(claim prop:1
-  (∏((E U) (p (-> E Nat)) (h E) ) (mot-prop:1 E p h))
-  )
-
-(define prop:1
-  (λ(E p h)
-    TODO
-    ; (cons (match-count E p (:: h nil)) (same 1))
-    )
-  )
-
-(claim mot-prop:2
-  (∏ ((E U)) (-> (-> E Nat) E (List E) U))
-  )
-(define mot-prop:2
-  (λ(E p h l)
-    (= Nat
-      (+ (match-count E p (:: h nil))
-        (match-count E p l)
-        )
-      (match-count E p (:: h l))
-      )
-    )
-  )
-
-(claim prop:2
-  (∏((E U) (p (-> E Nat)) (h E) (l (List E)))
-    (mot-prop:2 E p h l)
-    )
-  )
-(define prop:2
-  (λ(E p h l)
-    TODO
-    ;    (ind-List l
-    ;      (λ(lst) (mot-prop:1 E p h l))
-    ;      (same (match-count E p (:: h nil)))
-    ;      TODO
-    ;      )
-    )
-  )
-
 
 
 
@@ -354,6 +303,8 @@
   (λ(E p h l sfl<=sl)
     ; |filter p h::l|  <= 1 + |l|
     TODO
+    ; (cdr sfl<=sl)
+
     ;    (cons (add1 (car sfl<=sl))
 
     ;     (cong (cdr sfl<=sl) (+ 1))
@@ -380,6 +331,7 @@
 ; But in Pie - how to I prove cases?
 ; The only possibility seems to be a which-Nat
 ; Do we have a type that depends on (p h)?
+; Yes -- maybe this is then ind-Nat
 (claim sfhl<=1+sfl
   (∏ ((E U) (p (-> E Nat)) (h E) (l (List E)))
     (<= (length E (filter-list E p (:: h l)))
@@ -389,6 +341,109 @@
   )
 (define sfhl<=1+sfl
   (λ(E p h l)
+    (ind-List l
+      (λ(l)
+        (<= (length E (filter-list E p (:: h l)))
+          (add1 (length E (filter-list E p l)))
+          ))
+      (cons (p h) (same (add1 (p h))))
+      (λ(h t a-t)
+        TODO
+        )
+      )
+    )
+  )
+
+(claim mot-prop:100
+  (∏ ((E U))
+    (-> (-> E Nat) E U)
+    )
+  )
+
+(claim mot-prop:2
+  (∏ ((E U)) (-> (-> E Nat) E (List E) U))
+  )
+(define mot-prop:2
+  (λ(E p h l)
+    (= Nat
+      (+ (match-count E p (:: h nil))
+        (match-count E p l)
+        )
+      (match-count E p (:: h l))
+      )
+    )
+  )
+
+(claim prop:200
+  (∏((E U) (p (-> E Nat)) (h E) (l (List E)))
+    (mot-prop:2 E p h l)
+    )
+  )
+(define prop:200
+  (λ(E p h l)
+    TODO
+    ;    (ind-List l
+    ;      (λ(lst) (mot-prop:1 E p h l))
+    ;      (same (match-count E p (:: h nil)))
+    ;      TODO
+    ;      )
+    )
+  )
+
+(define mot-prop:100
+  (λ(E p h) (<= (match-count E p (:: h nil)) 1))
+  )
+
+(claim prop:100
+  (∏((E U) (p (-> E Nat)) (h E) ) (mot-prop:100 E p h))
+  )
+
+(define prop:100
+  (λ(E p h)
+    TODO
+    ; (cons (match-count E p (:: h nil)) (same 1))
+    )
+  )
+
+(claim mot-prop:080
+  (∏ ((E U)) (-> E (List E) U))
+  )
+
+(define mot-prop:080
+  (λ(E h l)
+    (<= (length E l) (length E (:: h l)))
+    )
+  )
+
+(claim l-l<=lhl
+  (∏((E U) (h E) (l (List E))) (mot-prop:080 E h l))
+  )
+
+(define l-l<=lhl
+  (λ(E _h l)
+    (cons 1  (same (add1 (length E l))))
+    )
+  )
+
+(claim mot-prop:wip
+  (∏ ((E U)) (-> (-> E Nat) E U))
+  )
+
+(define mot-prop:wip
+  (λ(E p h)
+    (<=
+      (match-count E p (:: h nil))
+      1
+      )
+    )
+  )
+
+(claim prop:wip
+  (∏((E U) (p (-> E Nat)) (h E) ) (mot-prop:wip E p h) )
+  )
+
+(define prop:wip
+  (λ(E p h)
     TODO
     )
   )
