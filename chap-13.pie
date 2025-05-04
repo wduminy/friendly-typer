@@ -80,12 +80,12 @@
     )
   )
 
-;(define nOrSuccnIsEven
-;  (λ(n)
-;    (ind-Either
-;      (mot-nOrSIsEven n)
-;      base-nOrSIsEven
-;      (mot-nOrSIsEven n)
-;      )
-;    )
-;  )
+(define nOrSuccnIsEven
+  (λ(n)
+    (ind-Nat n
+      mot-nOrSIsEven
+      base-nOrSIsEven
+      step-nOrSIsEven
+      )
+    )
+  )
