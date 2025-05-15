@@ -1,4 +1,4 @@
-#lang pie
+:#lang pie
 
 ;-------------------------------------------------------------------------------
 ; From previous chapters and exercises

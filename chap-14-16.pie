@@ -240,5 +240,5 @@
 
 (check-same (Maybe Nat) (maybe^ 2 3) (left 8))
 (check-same (Maybe Nat) (maybe^ 3 0) (left 1))
+(check-same (Maybe Nat) (maybe^ 0 3) (left 0))
 (check-same (Maybe Nat) (maybe^ 0 0) (right sole))
-

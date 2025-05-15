@@ -36,6 +36,14 @@
       (λ(_k-1 fk-1) (cong fk-1 (+ 1)))
       )))
 
+; n + (m + k) = (n + m) + k
+(claim plus-assoc-b
+  (Pi ((n Nat) (m Nat) (k Nat))
+    (= Nat (+ n (+ m k)) (+ (+ n m) k))))
+(define plus-assoc-b
+  (λ(n m k)
+    (plus-assoc m k n)))
+
 (claim filter-list (Pi((E U)) (-> (-> E Nat) (List E) (List E))))
 (claim step-filter (Pi((E U)) (-> (-> E Nat) E (List E) (List E) (List E))))
 (define step-filter
@@ -53,6 +61,73 @@
 (define predecessor (λ(n) (which-Nat n 0 (λ(n-1) n-1))))
 (claim - (-> Nat Nat Nat))
 (define - (λ(a b) (rec-Nat b a (λ(_b-1 a-b-1) (predecessor a-b-1)))))
+;add1(n + m) = n + add1(m)
+(claim add1+=+add1
+  (Pi ((n Nat) (m Nat))
+    (= Nat (add1 (+ n m)) (+ n (add1 m)))))
+
+(define add1+=+add1
+  (λ(n m)
+    (ind-Nat n
+      ; proposition
+      (λ(k) (= Nat (add1 (+ k m)) (+ k (add1 m))))
+      ; add1(0 + m) = (add1 1) + m
+      (same (add1 m))
+      (λ(_n-1 fn-1) (cong fn-1 (+ 1)))
+      )))
+
+(claim mot-pc (-> Nat Nat U))
+(define mot-pc
+  (λ(n m)
+    (= Nat (+ n m) (+ m n))
+    )
+  )
+
+; = (+ n 0) n
+(claim base-pc (Pi((n Nat)) (mot-pc n zero)))
+(define base-pc
+  (λ(n)
+    (ind-Nat
+      n
+      (λ(k) (= Nat (+ k 0) k))
+      (same zero)
+      (λ(_n-1 fn-1) (cong fn-1 (+ 1)))
+      )
+    )
+  )
+
+; n + add1(m) = add1(m) + n
+(claim step-pc (Pi((n Nat) (m Nat)) (-> (mot-pc n m) (mot-pc n (add1 m)))))
+(define step-pc
+  (λ(n m)
+    (λ(n+m=m+n)
+      ; n + add1(m) = add1(m) + n
+      (replace
+        ; add1(n + m) = n + add1(m)
+        (add1+=+add1 n m)
+        ; uses add1(m + n) = add1(m) + n -- definition of +
+        (λ(k) (= Nat k (+ (add1 m) n)))
+        ; add1(n + m) = add1 (m + n)
+        (cong n+m=m+n (+ 1))
+        )
+      )
+    )
+  )
+
+(claim plus-comm
+  (Pi ((n Nat) (m Nat))
+    (= Nat (+ n m) (+ m n))))
+
+(define plus-comm
+  (λ(n m)
+    (ind-Nat m
+      (mot-pc n)
+      (base-pc n)
+      (step-pc n)
+      )
+    )
+  )
+
 ;-------------------------------------------------------------------------------
 ; From chapter 10
 
@@ -234,218 +309,4 @@
       )
     )
   )
-
-;-------------------------------------------------------------------------------
-; Exercise 10.3
-; -------------
-; Define a function called length-filter-list that states and proves that
-; filtering a list (in the sense of filter-list from Exercise 5.3)
-; evaluates to a list no longer than the original list.
-
-; length of filtered list <= length of list
-
-(claim length-filter-list
-  (Pi ((E U)
-       (l (List E))
-       (p (-> E Nat)))
-    (<= (length E (filter-list E p l))
-        (length E l))))
-
-(claim match-count
-  (∏((E U))
-    (-> (-> E Nat) (List E) Nat))
-  )
-(define match-count
-  (λ(E p l) (length E (filter-list E p l)))
-  )
-
-
-(claim mot-lfl (∏((E U) (_p (-> E Nat))) (-> (List E) U)))
-(define mot-lfl
-  (λ(E p l)
-    (<=
-      (match-count E p l)
-      (length E l)
-      )
-    )
-  )
-
-(claim base-lfl (∏((E U) (p (-> E Nat))) (mot-lfl E p nil)))
-(define base-lfl
-  (λ(_E _p)
-    (cons zero (same zero))
-    )
-  )
-
-(claim step-lfl
-  (∏((E U) (p (-> E Nat)) (h E) (lst (List E)))
-    (->
-      (mot-lfl E p lst)
-      (mot-lfl E p (:: h lst))
-      )
-    )
-  )
-
-
-
-
-; Conceptual
-; A: |filter list| <= |list|  .. Given
-; B: 1 + |filter hlist| <= 1 + |list|  .. From A
-; C: |filter h::list| <= 1 + |filter list|  ..?
-; D: |filter h::list| <= 1 + |list| .. Transitive C and B
-; E: |filter h::list| <= |h::list| .. Rewrite E
-; Conceptual 2
-; A: Σ k1: k1 + |filter l| = |l|  .. Given
-; B: Σ k2: k2 + |filter l| = k1 + |filter h::l|  .. ?
-; C:
-(define step-lfl
-  (λ(E p h l sfl<=sl)
-    ; |filter p h::l|  <= 1 + |l|
-    TODO
-    ; (cdr sfl<=sl)
-
-    ;    (cons (add1 (car sfl<=sl))
-
-    ;     (cong (cdr sfl<=sl) (+ 1))
-    ;     )
-    )
-  )
-
-(define length-filter-list
-  (λ(E l p)
-    (ind-List l
-      ; motive
-      (λ(lst) (mot-lfl E p lst))
-      (base-lfl E p)
-      (step-lfl E p)
-      )
-    )
-  )
-
-; |filter h::list| <= 1 + |filter list|  ..?
-; I think I need an observation of |filter list|
-; We know
-;   if p h then |filter h::list| = 1 + |filter list|
-;   else |filter h::list| = |filter list|
-; But in Pie - how to I prove cases?
-; The only possibility seems to be a which-Nat
-; Do we have a type that depends on (p h)?
-; Yes -- maybe this is then ind-Nat
-(claim sfhl<=1+sfl
-  (∏ ((E U) (p (-> E Nat)) (h E) (l (List E)))
-    (<= (length E (filter-list E p (:: h l)))
-        (add1 (length E (filter-list E p l)))
-        )
-    )
-  )
-(define sfhl<=1+sfl
-  (λ(E p h l)
-    (ind-List l
-      (λ(l)
-        (<= (length E (filter-list E p (:: h l)))
-          (add1 (length E (filter-list E p l)))
-          ))
-      (cons (p h) (same (add1 (p h))))
-      (λ(h t a-t)
-        TODO
-        )
-      )
-    )
-  )
-
-(claim mot-prop:100
-  (∏ ((E U))
-    (-> (-> E Nat) E U)
-    )
-  )
-
-(claim mot-prop:2
-  (∏ ((E U)) (-> (-> E Nat) E (List E) U))
-  )
-(define mot-prop:2
-  (λ(E p h l)
-    (= Nat
-      (+ (match-count E p (:: h nil))
-        (match-count E p l)
-        )
-      (match-count E p (:: h l))
-      )
-    )
-  )
-
-(claim prop:200
-  (∏((E U) (p (-> E Nat)) (h E) (l (List E)))
-    (mot-prop:2 E p h l)
-    )
-  )
-(define prop:200
-  (λ(E p h l)
-    TODO
-    ;    (ind-List l
-    ;      (λ(lst) (mot-prop:1 E p h l))
-    ;      (same (match-count E p (:: h nil)))
-    ;      TODO
-    ;      )
-    )
-  )
-
-(define mot-prop:100
-  (λ(E p h) (<= (match-count E p (:: h nil)) 1))
-  )
-
-(claim prop:100
-  (∏((E U) (p (-> E Nat)) (h E) ) (mot-prop:100 E p h))
-  )
-
-(define prop:100
-  (λ(E p h)
-    TODO
-    ; (cons (match-count E p (:: h nil)) (same 1))
-    )
-  )
-
-(claim mot-prop:080
-  (∏ ((E U)) (-> E (List E) U))
-  )
-
-(define mot-prop:080
-  (λ(E h l)
-    (<= (length E l) (length E (:: h l)))
-    )
-  )
-
-(claim l-l<=lhl
-  (∏((E U) (h E) (l (List E))) (mot-prop:080 E h l))
-  )
-
-(define l-l<=lhl
-  (λ(E _h l)
-    (cons 1  (same (add1 (length E l))))
-    )
-  )
-
-(claim mot-prop:wip
-  (∏ ((E U)) (-> (-> E Nat) E U))
-  )
-
-(define mot-prop:wip
-  (λ(E p h)
-    (<=
-      (match-count E p (:: h nil))
-      1
-      )
-    )
-  )
-
-(claim prop:wip
-  (∏((E U) (p (-> E Nat)) (h E) ) (mot-prop:wip E p h) )
-  )
-
-(define prop:wip
-  (λ(E p h)
-    TODO
-    )
-  )
-
 
